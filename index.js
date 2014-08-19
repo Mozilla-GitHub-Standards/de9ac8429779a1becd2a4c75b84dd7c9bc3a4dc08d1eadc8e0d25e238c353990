@@ -1,84 +1,57 @@
 'use strict';
 
-var fs = require('fs');
 var dimensions = require('image-size');
 
 var MAX_IMAGE_SIZE = 2 * 1024 * 1024;
 
-var finish = function (err, next) {
-  next({
-    errors: err.errors,
-    warnings: err.warnings || {}
-  });
+var errors = {};
+var warnings = {};
 
-  return;
-};
+var ManifestIcon = function () {
+  this.maxFileSize = MAX_IMAGE_SIZE;
 
-var getIconSize = function (image, fileSize, next) {
-  fs.stat(image, function (err, stat) {
-    if (err) {
-      finish({
-        errors: {
-          InvalidIconFileSize: 'Cannot retrieve icon filesize'
-        }
-      }, next);
-      return;
-    }
+  var self = this;
 
-    if (stat.size > fileSize) {
-      finish({
-        errors: {
-          IconSizeTooLarge: 'Filesize is greater than ' + Math.floor(fileSize / 1024 / 1024) + 'MB'
-        }
-      }, next);
-      return;
-    }
+  var validateSize = function () {
+    if (self.buffer instanceof Buffer) {
+      var bufferSize = self.buffer.length;
 
-    finish({
-      errors: {},
-      warnings: {}
-    }, next);
-  });
-};
-
-var getSquareness = function (image, d, next) {
-  if (d.width !== d.height) {
-    finish({
-      errors: {
-        InvalidIconSize: 'The icon must be a square'
+      if (bufferSize > self.maxFileSize) {
+        errors.IconSizeTooLarge = 'Filesize is greater than ' +
+          Math.floor(self.maxFileSize / 1024 / 1024) + 'MB';
       }
-    }, next);
-    return;
-  }
-
-  next();
-};
-
-var getDimensions = function (image, next) {
-  dimensions(image, function (err, d) {
-    if (err || !d) {
-      finish({
-        errors: {
-          InvalidIconDimensions: 'The dimensions could not be retrieved from ' +
-            'this image'
-        }
-      }, next);
-      return;
+    } else {
+      errors.InvalidIconFileSize = 'Cannot retrieve icon filesize';
     }
+  };
 
-    getSquareness(image, d, next);
-  });
-};
+  var validateSquareness = function () {
+    try {
+      var imageDimensions = dimensions(self.buffer);
 
-module.exports = function (image, options, next) {
-  var fileSize = parseInt(options.size, 10) || MAX_IMAGE_SIZE;
-
-  getDimensions(image, function (err) {
-    if (err) {
-      finish(err, next);
-      return;
+      if (imageDimensions.width !== imageDimensions.height) {
+        errors.InvalidIconSize = 'The icon must be a square';
+      }
+    } catch (err) {
+      errors.InvalidIconDimensions = 'The dimensions could not be retrieved from ' +
+        'this image'
     }
+  };
 
-    getIconSize(image, fileSize, next);
-  });
+  this.validate = function (buffer) {
+    errors = {};
+    warnings = {};
+
+    this.buffer = buffer;
+
+    validateSize();
+    validateSquareness();
+
+    return {
+      errors: errors,
+      warnings: warnings
+    }
+  };
 };
+
+module.exports = ManifestIcon;

@@ -1,6 +1,6 @@
 {
   "name": "firefox-app-validator-icons",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "App validation (icons) for https://marketplace.firefox.com",
   "main": "index.js",
   "dependencies": {
@@ -16,7 +16,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/mozilla/node-firefox-app-validator-icons.git"
+    "url": "git://github.com/mozilla/firefox-app-validator-icons.git"
   },
   "keywords": [
     "firefox", "firefox marketplace", "firefoxos", "firefox os", "icons"
