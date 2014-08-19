@@ -10,11 +10,13 @@ png, jpg/jpeg
 
 This is just to validate file-specific rules for the icons provided in a Firefox OS manifest.
 
-    var icons = rquire('firefox-app-validator-icons');
+    var fs = require('fs');
+    var ManifestIcon = require('firefox-app-validator-icons');
 
-    icons('/path/to/icon.png', function (results) {
-      console.log(results);
-    });
+    var icons = new ManifestIcon();
+
+    var results = icons(fs.readFileSync('/path/to/icon.png');
+    console.log(results);
 
 If there are any errors, you can access them in results.errors and warnings in results.warnings
 
